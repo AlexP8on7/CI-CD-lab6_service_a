@@ -1,33 +1,31 @@
 name: Build & Push Image
 on:
   push:
-    branches: [master]
+    branches: [main, master, service_a]
   workflow_dispatch:
 
 jobs:
   docker:
     runs-on: ubuntu-latest
-  permissions:
-    contents: read
-    packages: write
-steps:
-  - uses: actions/checkout@v4
-  
-  - name: Set image name
-    run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/service_a" >> $GITHUB_ENV
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
 
-  - name: Login to GHCR
-    uses: docker/login-action@v3
-    with:
-      registry: ghcr.io
-      username: ${{ github.actor }}
-      password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set lowercase repo name
+        run: echo "REPO_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
-  - name: Build and Push
-    uses: docker/build-push-action@v6
-    with:
-    context: .
-    push: true
-    tags: |
-      ${{ env.IMAGE }}:latest
-      ${{ env.IMAGE }}:${{ github.sha }}
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ env.REPO_NAME }}/service_a:latest,ghcr.io/${{ env.REPO_NAME }}/service_a:${{ github.sha }}
